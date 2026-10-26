@@ -1,0 +1,6 @@
+/build/
+/llm-client
+/llm-server
+__pycache__/
+# Private provenance notes: never publish.
+/private/

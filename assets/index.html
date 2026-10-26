@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local LLM Gateway</title>
+<style>
+  :root { color-scheme: light dark; --bg: #f7f7f5; --fg: #1d1d1b; --muted: #6b6b66; --line: #d9d9d4; --accent: #2f5d8a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161614; --fg: #ececea; --muted: #a0a09a; --line: #34342f; --accent: #8db4dc; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem; }
+  h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
+  p { color: var(--muted); margin: 0 0 1.5rem; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 5rem; padding: .6rem; font: inherit;
+             background: transparent; color: var(--fg); border: 1px solid var(--line); border-radius: 6px; }
+  button { margin-top: .6rem; padding: .45rem 1rem; font: inherit; color: var(--bg); background: var(--accent);
+           border: 0; border-radius: 6px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
+  pre { white-space: pre-wrap; word-break: break-word; border-top: 1px solid var(--line); padding-top: 1rem; }
+  .error { color: #b3261e; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Local LLM Gateway</h1>
+  <p>Each prompt is sent as <code>POST /</code>. This page keeps one HTTP connection per
+     browser tab only if the browser chooses to, so chat history may not carry over between prompts.</p>
+  <form id="f">
+    <label for="prompt">Prompt</label>
+    <textarea id="prompt" maxlength="2047" required></textarea>
+    <button id="send" type="submit">Send</button>
+  </form>
+  <pre id="out" aria-live="polite"></pre>
+</main>
+<script>
+  const form = document.getElementById("f");
+  const out = document.getElementById("out");
+  const send = document.getElementById("send");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text = document.getElementById("prompt").value.replace(/\n/g, " ");
+    send.disabled = true;
+    out.className = "";
+    out.textContent = "Waiting for the backend...";
+    try {
+      const response = await fetch("/", { method: "POST", body: text + "\n" });
+      out.textContent = await response.text();
+      if (!response.ok) { out.className = "error"; }
+    } catch (error) {
+      out.className = "error";
+      out.textContent = "Request failed: " + error;
+    } finally {
+      send.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
